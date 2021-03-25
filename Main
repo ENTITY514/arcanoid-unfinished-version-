@@ -1,0 +1,131 @@
+import pygame
+
+width = 600
+height = 500
+red = (255, 0, 0)
+green = (0, 255, 0)
+blue = (0, 0, 255)
+white = (255, 255, 255)
+black = (0, 0, 0)
+fps = 60
+
+window = pygame.display.set_mode((width, height))
+pygame.display.set_caption("Arcanoid")
+clock = pygame.time.Clock()
+
+
+class Player():
+    def __init__(self):
+        self.x = 20
+        self.y = height - 20
+        self.height = 10
+        self.width = 60
+        self.speed = 8
+        self.color = white
+        self.radius = 5
+
+    def Draw(self):
+        pygame.draw.rect(window, self.color, [self.x, self.y, self.width, self.height])
+        pygame.draw.circle(window, self.color, [self.x, self.y + self.radius], self.radius)
+        pygame.draw.circle(window, self.color, [self.x + self.width, self.y + self.radius], self.radius)
+
+    def Move(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and self.x - self.speed - self.radius >= 0:
+            self.x -= self.speed
+        if keys[pygame.K_RIGHT] and self.x + self.width + self.speed + self.radius <= width:
+            self.x += self.speed
+
+
+class Ball():
+    def __init__(self):
+        self.x = width / 2
+        self.y = height / 2
+        self.speed_x = 5
+        self.speed_y = 5
+        self.radius = 10
+        self.color = white
+
+    def Draw(self):
+        pygame.draw.circle(window, self.color, [self.x, self.y], self.radius)
+
+    def Move(self):
+        if self.x + self.speed_x > width:
+            self.speed_x = -self.speed_x
+        if self.x + self.speed_x < 0:
+            self.speed_x = -self.speed_x
+        if self.y + self.speed_y > height:
+            self.speed_y = -self.speed_y
+        if self.y + self.speed_y < 0:
+            self.speed_y = -self.speed_y
+        self.x += self.speed_x
+        self.y += self.speed_y
+
+
+class Enemy():
+    def __init__(self):
+        self.x = 5
+        self.y = 10
+        self.height = 10
+        self.width = 50
+        self.color = green
+
+    def Draw(self):
+        pygame.draw.rect(window, self.color, [self.x, self.y, self.width, self.height])
+
+
+player = Player()
+ball = Ball()
+enemies = []
+
+for i in range(20):
+    enemies.append(Enemy())
+a = 0
+b = 0
+for enemy in enemies:
+    enemy.x += (enemy.width + 10) * a
+    enemy.y += b * (enemy.height + 5)
+    a += 1
+    if a > 9:
+        b += 1
+        a = 0
+
+
+def Collision_with_player():
+    if ball.x + ball.radius + ball.speed_x > player.x and ball.x - ball.radius - ball.speed_x < player.x + player.width:
+        if ball.y + ball.speed_y + ball.radius > player.y and ball.y + ball.radius + ball.speed_y < player.y + player.height:
+            ball.speed_y = -ball.speed_y
+
+
+def Enemy_collision_with_ball():
+    for enemy in enemies:
+        if ball.x + ball.radius + ball.speed_x > enemy.x and ball.x - ball.radius - ball.speed_x < enemy.x + enemy.width:
+            if ball.y - ball.radius - ball.speed_y > enemy.y and ball.y - ball.radius - ball.speed_y < enemy.y + enemy.height:
+                ball.speed_y = -ball.speed_y
+                enemy.x = -60
+        if ball.y + ball.radius > enemy.y and ball.y - ball.radius < enemy.y + enemy.height:
+            if ball.x + ball.radius > enemy.x and ball.x - ball.radius < enemy.x + enemy.width:
+                ball.speed_y = -ball.speed_y
+                enemy.x = -60
+
+
+run = True
+while run:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+    window.fill(black)
+
+    player.Move()
+    ball.Move()
+    Collision_with_player()
+    Enemy_collision_with_ball()
+    for enemy in enemies:
+        enemy.Draw()
+    player.Draw()
+    ball.Draw()
+
+    pygame.display.update()
+    clock.tick(fps)
+
+pygame.quit()
